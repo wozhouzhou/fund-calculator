@@ -1,0 +1,18 @@
+{
+  "name": "fund-calculator",
+  "version": "1.0.0",
+  "description": "实时基金盈亏计算器 - 多基金投资组合看板",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.7.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "iconv-lite": "^0.6.3"
+  }
+}
