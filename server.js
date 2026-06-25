@@ -297,7 +297,7 @@ app.get('/api/fund/:code', async (req, res) => {
 
 // ─── 启动 ─────────────────────────────────────────
 app.listen(PORT, HOST, () => {
-  console.log(`\n  📊 实时基金盈亏计算器已启动`);
+  console.log(`\n  📊 三金基金助手已启动`);
   console.log(`  ─────────────────────────────`);
   console.log(`  本地地址: http://localhost:${PORT}`);
   console.log(`  示例: http://localhost:${PORT}/?demo=1  (带演示数据)\n`);

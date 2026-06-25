@@ -1,7 +1,7 @@
 {
   "name": "fund-calculator",
   "version": "1.0.0",
-  "description": "实时基金盈亏计算器 - 多基金投资组合看板",
+  "description": "三金基金助手 - 多基金投资组合看板",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
