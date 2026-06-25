@@ -412,12 +412,31 @@ let useTotalCostMode = false;  // true: 成本总额+份额 → 反算单价
 //  Load / Save
 // ══════════════════════════════════════════════════
 
-function loadPortfolio() {
+async function loadPortfolio() {
+  // 先从服务端按 IP 加载
+  try {
+    const resp = await fetch('/api/portfolio');
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.portfolio && data.portfolio.length) {
+        portfolio = data.portfolio;
+        // 兼容旧数据
+        portfolio.forEach(p => {
+          if (p.totalCost === undefined) p.totalCost = p.costPrice * p.shares;
+        });
+        // 同步到 localStorage 作为本地缓存
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(portfolio));
+        return;
+      }
+    }
+  } catch (e) {
+    console.log('服务端加载失败，尝试 localStorage', e.message);
+  }
+  // 回退到 localStorage
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) portfolio = JSON.parse(raw);
   } catch (e) { portfolio = []; }
-  // 兼容旧数据：补 totalCost
   portfolio.forEach(p => {
     if (p.totalCost === undefined) p.totalCost = p.costPrice * p.shares;
   });
@@ -425,6 +444,12 @@ function loadPortfolio() {
 
 function savePortfolio() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(portfolio));
+  // 异步保存到服务端（不阻塞 UI）
+  fetch('/api/portfolio', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ portfolio })
+  }).catch(e => console.log('服务端保存失败', e.message));
   updateFundCount();
 }
 
@@ -866,7 +891,7 @@ function stopAutoRefresh() {
 // ══════════════════════════════════════════════════
 
 async function init() {
-  loadPortfolio();
+  await loadPortfolio();
 
   if (portfolio.length) {
     updateStatus('loading', '正在获取首屏数据…');

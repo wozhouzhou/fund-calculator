@@ -2,14 +2,57 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 
+app.set('trust proxy', true);
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// ─── IP 化持仓持久化 ────────────────────────────
+const PORTFOLIO_FILE = path.join(__dirname, '.portfolio-data.json');
+
+function getClientIp(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) return forwarded.split(',')[0].trim();
+  return req.ip || req.connection?.remoteAddress || '127.0.0.1';
+}
+
+function readAllPortfolios() {
+  try {
+    return JSON.parse(fs.readFileSync(PORTFOLIO_FILE, 'utf-8'));
+  } catch {
+    return {};
+  }
+}
+
+function writeAllPortfolios(data) {
+  fs.writeFileSync(PORTFOLIO_FILE, JSON.stringify(data, null, 2));
+}
+
+// 获取当前 IP 的持仓
+app.get('/api/portfolio', (req, res) => {
+  const ip = getClientIp(req);
+  const all = readAllPortfolios();
+  res.json({ ip, portfolio: all[ip] || [] });
+});
+
+// 保存当前 IP 的持仓
+app.post('/api/portfolio', (req, res) => {
+  const ip = getClientIp(req);
+  const { portfolio } = req.body;
+  if (!Array.isArray(portfolio)) {
+    return res.status(400).json({ error: 'portfolio 必须是数组' });
+  }
+  const all = readAllPortfolios();
+  all[ip] = portfolio;
+  writeAllPortfolios(all);
+  res.json({ ok: true });
+});
 
 // ─── 交易所前缀判断 ──────────────────────────────
 function getExchangePrefix(code) {
